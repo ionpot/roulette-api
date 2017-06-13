@@ -1,0 +1,15 @@
+{
+  "name": "roulette-api",
+  "version": "1.0.0",
+  "description": "An HTTP API for hosting roulette games.",
+  "scripts": {
+    "start": "node server.js",
+    "test": "mocha --recursive -u qunit -R list"
+  },
+  "author": "Emir Kotan",
+  "license": "ISC",
+  "private": true,
+  "devDependencies": {
+    "mocha": "^3.4.2"
+  }
+}
