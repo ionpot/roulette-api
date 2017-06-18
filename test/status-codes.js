@@ -67,3 +67,19 @@ test("501 OPTIONS", function (done) {
 
 	send(req, 501, done);
 });
+
+test("404 GET", function (done) {
+	this.timeout(500);
+
+	var req = makeReq("GET", "/invalid-path");
+
+	send(req, 404, done);
+});
+
+test("404 POST", function (done) {
+	this.timeout(500);
+
+	var req = makeReq("POST", "/invalid-path");
+
+	send(req, 404, done);
+});
