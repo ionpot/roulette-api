@@ -83,3 +83,13 @@ test("404 POST", function (done) {
 
 	send(req, 404, done);
 });
+
+test("411", function (done) {
+	this.timeout(500);
+
+	var req = makeReq("POST", "/", {
+		"content-type": "application/json"
+	});
+
+	send(req, 411, done);
+});
