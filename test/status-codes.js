@@ -5,7 +5,7 @@ var A = require("assert");
 var R = require("utils/readable");
 var W = require("utils/writable");
 
-var sut = require("../router.js");
+var sut = require("../lib/router.js");
 
 function makeReq(method, url, head, body) {
 	var req = R.create(body || "");
