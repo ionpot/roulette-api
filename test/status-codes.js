@@ -104,3 +104,15 @@ test("413", function (done) {
 
 	send(req, 413, done);
 });
+
+test("415", function (done) {
+	this.timeout(500);
+
+	var req = makeReq("POST", "/", {
+		"content-type": "text/plain",
+		"content-length": 1
+
+	}, "a");
+
+	send(req, 415, done);
+});
