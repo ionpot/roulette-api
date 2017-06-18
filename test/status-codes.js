@@ -93,3 +93,14 @@ test("411", function (done) {
 
 	send(req, 411, done);
 });
+
+test("413", function (done) {
+	this.timeout(500);
+
+	var req = makeReq("POST", "/", {
+		"content-type": "application/json",
+		"content-length": 1001
+	});
+
+	send(req, 413, done);
+});
