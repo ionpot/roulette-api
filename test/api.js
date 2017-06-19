@@ -99,6 +99,12 @@ function sendErr(req, done) {
 	sut(req, res);
 }
 
+function newRoom(done) {
+	var req = POST("/");
+
+	sendOk(req, done);
+}
+
 suite("API");
 
 test("501 HEAD", function (done) {
@@ -195,5 +201,35 @@ test("GET /", function (done) {
 
 			done();
 		});
+	});
+});
+
+test("GET /state", function (done) {
+	this.timeout(500);
+
+	newRoom(function (room) {
+		var req = GET("/state/" + room.number);
+
+		sendOk(req, function (state) {
+			A.strictEqual(state.round, 1);
+			A.strictEqual(state.maxRounds, room.maxRounds);
+			A.strictEqual(state.duration, room.duration);
+			A.ok(state.remaining <= (room.duration * 1000));
+
+			done();
+		});
+	});
+});
+
+test("GET /state/invalid", function (done) {
+	this.timeout(500);
+
+	var req = GET("/state/invalid");
+
+	sendErr(req, function (err) {
+		A.strictEqual(err.code, 1);
+		A.strictEqual(typeof err.text, "string");
+
+		done();
 	});
 });
