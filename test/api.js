@@ -233,3 +233,32 @@ test("GET /state/invalid", function (done) {
 		done();
 	});
 });
+
+test("POST /join", function (done) {
+	this.timeout(500);
+
+	newRoom(function (room) {
+		var req = POST("/join/" + room.number);
+
+		sendOk(req, function (info) {
+			A.strictEqual(typeof info.id, "string");
+			A.strictEqual(info.id.length, 64);
+			A.strictEqual(typeof info.remaining, "number");
+
+			done();
+		});
+	});
+});
+
+test("POST /join/invalid", function (done) {
+	this.timeout(500);
+
+	var req = POST("/join/invalid");
+
+	sendErr(req, function (err) {
+		A.strictEqual(err.code, 1);
+		A.strictEqual(typeof err.text, "string");
+
+		done();
+	});
+});
