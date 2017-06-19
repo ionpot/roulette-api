@@ -7,21 +7,32 @@ var W = require("utils/writable");
 
 var sut = require("../lib/router.js");
 
-function makeReq(method, url, obj) {
-	var body = obj ? JSON.stringify(obj) : "";
-	var req = R.create(body);
-	var hdr = {};
-
-	if (body) {
-		hdr["content-length"] = Buffer.byteLength(body);
-		hdr["content-type"] = "application/json";
-	}
+function makeReq(method, url, head, body) {
+	var req = R.create(body || "");
 
 	req.method = method;
 	req.url = url;
-	req.headers = hdr;
+	req.headers = head || {};
+
+	req._dump = function () {
+		return;
+	};
 
 	return req;
+}
+
+function validReq(method, url, obj) {
+	var head = {};
+	var body = obj
+		? JSON.stringify(obj)
+		: "";
+
+	if (body) {
+		head["content-length"] = Buffer.byteLength(body);
+		head["content-type"] = "application/json";
+	}
+
+	return makeReq(method, url, head, body);
 }
 
 function GET(url) {
@@ -29,39 +40,116 @@ function GET(url) {
 }
 
 function POST(url, obj) {
-	return makeReq("POST", url, obj);
+	return validReq("POST", url, obj);
 }
 
-function send(expectedStatusCode, req, done) {
+function makeRes(done) {
 	var res = W.create();
-	var head = {};
+	var actual = {};
 
-	res.writeHead = function (code, hdr) {
-		head.code = code;
-		head.type = hdr["content-type"];
+	res.writeHead = function (code, head) {
+		actual.code = code;
+		actual.head = head;
 	};
 
-	res.on("end", function () {
-		A.strictEqual(head.code, expectedStatusCode);
-		A.strictEqual(head.type, "application/json");
+	res.on("finish", function () {
+		actual.body = res.out;
 
-		done(JSON.parse(res.out));
+		done(actual);
 	});
+
+	return res;
+}
+
+function emptyRes(scode, done) {
+	return makeRes(function (res) {
+		A.strictEqual(res.code, scode);
+
+		done();
+	});
+}
+
+function jsonRes(scode, done) {
+	return makeRes(function (res) {
+		var head = res.head;
+
+		A.strictEqual(res.code, scode);
+		A.strictEqual(head["content-type"], "application/json");
+		A.ok(head["content-length"] > 0);
+
+		done(JSON.parse(res.body));
+	});
+}
+
+function sendEmpty(req, scode, done) {
+	var res = emptyRes(scode, done);
 
 	sut(req, res);
 }
 
 function sendOk(req, done) {
-	send(200, req, done);
+	var res = jsonRes(200, done);
+
+	sut(req, res);
 }
 
 function sendErr(req, done) {
-	send(422, req, done);
+	var res = jsonRes(422, done);
+
+	sut(req, res);
 }
 
 suite("API");
 
-test("create room defaults", function (done) {
+test("501 HEAD", function (done) {
+	this.timeout(500);
+
+	var req = makeReq("HEAD", "/");
+
+	sendEmpty(req, 501, done);
+});
+
+test("501 PUT", function (done) {
+	this.timeout(500);
+
+	var req = makeReq("PUT", "/");
+
+	sendEmpty(req, 501, done);
+});
+
+test("501 DELETE", function (done) {
+	this.timeout(500);
+
+	var req = makeReq("DELETE", "/");
+
+	sendEmpty(req, 501, done);
+});
+
+test("501 OPTIONS", function (done) {
+	this.timeout(500);
+
+	var req = makeReq("OPTIONS", "/");
+
+	sendEmpty(req, 501, done);
+});
+
+test("404 GET", function (done) {
+	this.timeout(500);
+
+	var req = makeReq("GET", "/invalid-path");
+
+	sendEmpty(req, 404, done);
+});
+
+test("404 POST", function (done) {
+	this.timeout(500);
+
+	var req = makeReq("POST", "/invalid-path");
+
+	sendEmpty(req, 404, done);
+});
+
+test("POST / defaults", function (done) {
 	this.timeout(500);
 
 	var req = POST("/");
@@ -75,7 +163,7 @@ test("create room defaults", function (done) {
 	});
 });
 
-test("create room settings", function (done) {
+test("POST / settings", function (done) {
 	this.timeout(500);
 
 	var obj = {
@@ -90,5 +178,22 @@ test("create room settings", function (done) {
 		A.strictEqual(body.maxRounds, obj.maxRounds);
 
 		done();
+	});
+});
+
+test("GET /", function (done) {
+	this.timeout(500);
+
+	var req = POST("/");
+
+	sendOk(req, function (room) {
+		req = GET("/");
+
+		sendOk(req, function (arr) {
+			A.ok(Array.isArray(arr));
+			A.ok(arr.indexOf(room.number) >= 0);
+
+			done();
+		});
 	});
 });
