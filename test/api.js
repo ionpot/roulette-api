@@ -162,7 +162,7 @@ test("404 GET", function (done) {
 
 	var req = makeReq("GET", "/invalid-path");
 
-	checkHttpErr(req, 404, done);
+	checkHttpErr(404, req, done);
 });
 
 test("404 POST", function (done) {
