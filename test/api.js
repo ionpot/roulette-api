@@ -1,7 +1,6 @@
 "use strict";
 
-var A = require("assert");
-
+var A = require("utils/assert");
 var R = require("utils/readable");
 var W = require("utils/writable");
 
@@ -63,7 +62,7 @@ function makeRes(done) {
 
 function emptyRes(scode, done) {
 	return makeRes(function (res) {
-		A.strictEqual(res.code, scode);
+		A.eq(res.code, scode);
 
 		done();
 	});
@@ -73,8 +72,8 @@ function jsonRes(scode, done) {
 	return makeRes(function (res) {
 		var head = res.head;
 
-		A.strictEqual(res.code, scode);
-		A.strictEqual(head["content-type"], "application/json");
+		A.eq(res.code, scode);
+		A.eq(head["content-type"], "application/json");
 		A.ok(head["content-length"] > 0);
 
 		done(JSON.parse(res.body));
@@ -161,9 +160,9 @@ test("POST / defaults", function (done) {
 	var req = POST("/");
 
 	sendOk(req, function (body) {
-		A.strictEqual(typeof body.number, "number");
-		A.strictEqual(body.duration, 20);
-		A.strictEqual(body.maxRounds, 5);
+		A.isNum(body.number);
+		A.eq(body.duration, 20);
+		A.eq(body.maxRounds, 5);
 
 		done();
 	});
@@ -179,9 +178,9 @@ test("POST / settings", function (done) {
 	var req = POST("/", obj);
 
 	sendOk(req, function (body) {
-		A.strictEqual(typeof body.number, "number");
-		A.strictEqual(body.duration, obj.duration);
-		A.strictEqual(body.maxRounds, obj.maxRounds);
+		A.isNum(body.number);
+		A.eq(body.duration, obj.duration);
+		A.eq(body.maxRounds, obj.maxRounds);
 
 		done();
 	});
@@ -196,8 +195,8 @@ test("GET /", function (done) {
 		req = GET("/");
 
 		sendOk(req, function (arr) {
-			A.ok(Array.isArray(arr));
-			A.ok(arr.indexOf(room.number) >= 0);
+			A.isArr(arr);
+			A.has(room.number, arr);
 
 			done();
 		});
@@ -211,9 +210,9 @@ test("GET /state", function (done) {
 		var req = GET("/state/" + room.number);
 
 		sendOk(req, function (state) {
-			A.strictEqual(state.round, 1);
-			A.strictEqual(state.maxRounds, room.maxRounds);
-			A.strictEqual(state.duration, room.duration);
+			A.eq(state.round, 1);
+			A.eq(state.maxRounds, room.maxRounds);
+			A.eq(state.duration, room.duration);
 			A.ok(state.remaining <= (room.duration * 1000));
 
 			done();
@@ -227,8 +226,8 @@ test("GET /state/invalid", function (done) {
 	var req = GET("/state/invalid");
 
 	sendErr(req, function (err) {
-		A.strictEqual(err.code, 1);
-		A.strictEqual(typeof err.text, "string");
+		A.eq(err.code, 1);
+		A.isStr(err.text);
 
 		done();
 	});
@@ -241,9 +240,9 @@ test("POST /join", function (done) {
 		var req = POST("/join/" + room.number);
 
 		sendOk(req, function (info) {
-			A.strictEqual(typeof info.id, "string");
-			A.strictEqual(info.id.length, 64);
-			A.strictEqual(typeof info.remaining, "number");
+			A.isStr(info.id);
+			A.eq(info.id.length, 64);
+			A.isNum(info.remaining);
 
 			done();
 		});
@@ -256,8 +255,8 @@ test("POST /join/invalid", function (done) {
 	var req = POST("/join/invalid");
 
 	sendErr(req, function (err) {
-		A.strictEqual(err.code, 1);
-		A.strictEqual(typeof err.text, "string");
+		A.eq(err.code, 1);
+		A.isStr(err.text);
 
 		done();
 	});
