@@ -1,6 +1,11 @@
 # Roulette API
 An HTTP API implemented in Node.js, designed for private use.
 
+## Setup
+To run the tests, the *mocha* package is required, which can be fetched by running *npm install* inside the cloned directory. Afterwards, inputting *npm test* should run the tests.
+
+The API has no other dependencies, and can be started via *npm start*, which will start the HTTP server on port 8080 by default. This can be overridden by starting it via *npm start -- 9000* instead.
+
 ## Overview
 - Games take place in rooms.
 - A room hosts a number of rounds with fixed durations.
