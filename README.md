@@ -123,7 +123,7 @@ Request:
 ```js
 {
 	id: /* (string) Id of the player, obtained when joining. */,
-	amount: /* (number) How much to bet. */,
+	amount: /* (number) How much to bet. Can be a negative number to subtract from previously added amounts. */,
 	numbers: [
 		/* (number) Numbers to bet on. The ones lower than 0 or higher than 36 are ignored, and won't take place in the response. */
 	]
