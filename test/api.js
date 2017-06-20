@@ -80,12 +80,6 @@ function jsonRes(scode, done) {
 	});
 }
 
-function sendEmpty(req, scode, done) {
-	var res = emptyRes(scode, done);
-
-	sut(req, res);
-}
-
 function sendOk(req, done) {
 	var res = jsonRes(200, done);
 
@@ -96,6 +90,21 @@ function sendErr(req, done) {
 	var res = jsonRes(422, done);
 
 	sut(req, res);
+}
+
+function checkHttpErr(code, req, done) {
+	var res = emptyRes(code, done);
+
+	sut(req, res);
+}
+
+function checkApiErr(code, req, done) {
+	sendErr(req, function (res) {
+		A.eq(res.code, code);
+		A.isStr(res.text);
+
+		done();
+	});
 }
 
 function newRoom(done) {
@@ -111,7 +120,7 @@ test("501 HEAD", function (done) {
 
 	var req = makeReq("HEAD", "/");
 
-	sendEmpty(req, 501, done);
+	checkHttpErr(501, req, done);
 });
 
 test("501 PUT", function (done) {
@@ -119,7 +128,7 @@ test("501 PUT", function (done) {
 
 	var req = makeReq("PUT", "/");
 
-	sendEmpty(req, 501, done);
+	checkHttpErr(501, req, done);
 });
 
 test("501 DELETE", function (done) {
@@ -127,7 +136,7 @@ test("501 DELETE", function (done) {
 
 	var req = makeReq("DELETE", "/");
 
-	sendEmpty(req, 501, done);
+	checkHttpErr(501, req, done);
 });
 
 test("501 OPTIONS", function (done) {
@@ -135,7 +144,7 @@ test("501 OPTIONS", function (done) {
 
 	var req = makeReq("OPTIONS", "/");
 
-	sendEmpty(req, 501, done);
+	checkHttpErr(501, req, done);
 });
 
 test("404 GET", function (done) {
@@ -143,7 +152,7 @@ test("404 GET", function (done) {
 
 	var req = makeReq("GET", "/invalid-path");
 
-	sendEmpty(req, 404, done);
+	checkHttpErr(req, 404, done);
 });
 
 test("404 POST", function (done) {
@@ -151,7 +160,7 @@ test("404 POST", function (done) {
 
 	var req = makeReq("POST", "/invalid-path");
 
-	sendEmpty(req, 404, done);
+	checkHttpErr(404, req, done);
 });
 
 test("POST / defaults", function (done) {
@@ -225,12 +234,7 @@ test("GET /state/invalid", function (done) {
 
 	var req = GET("/state/invalid");
 
-	sendErr(req, function (err) {
-		A.eq(err.code, 1);
-		A.isStr(err.text);
-
-		done();
-	});
+	checkApiErr(1, req, done);
 });
 
 test("POST /join", function (done) {
@@ -254,10 +258,5 @@ test("POST /join/invalid", function (done) {
 
 	var req = POST("/join/invalid");
 
-	sendErr(req, function (err) {
-		A.eq(err.code, 1);
-		A.isStr(err.text);
-
-		done();
-	});
+	checkApiErr(1, req, done);
 });
