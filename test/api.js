@@ -113,6 +113,16 @@ function newRoom(done) {
 	sendOk(req, done);
 }
 
+function joinRoom(done) {
+	newRoom(function (room) {
+		var req = POST("/join/" + room.number);
+
+		sendOk(req, function (player) {
+			done(player, room);
+		});
+	});
+}
+
 suite("API");
 
 test("501 HEAD", function (done) {
@@ -259,4 +269,106 @@ test("POST /join/invalid", function (done) {
 	var req = POST("/join/invalid");
 
 	checkApiErr(1, req, done);
+});
+
+test("POST /bet", function (done) {
+	this.timeout(500);
+
+	joinRoom(function (player, room) {
+		var req = POST("/bet/" + room.number, {
+			id: player.id,
+			amount: 10,
+			numbers: [-1, 1, 41]
+		});
+
+		sendOk(req, function (res) {
+			A.eq(res.amount, 10);
+			A.eq(res.numbers.length, 1);
+			A.eq(res.numbers[0], 1);
+		});
+	});
+});
+
+test("POST /bet invalid room", function (done) {
+	this.timeout(500);
+
+	var req = POST("/bet/invalid");
+
+	checkApiErr(1, req, done);
+});
+
+test("POST /bet invalid id", function (done) {
+	this.timeout(500);
+
+	joinRoom(function (player, room) {
+		var req = POST("/bet/" + room.number, {
+			id: 0,
+			amount: 10,
+			numbers: [-1, 1, 41]
+		});
+
+		checkApiErr(2, req, done);
+	});
+});
+
+test("POST /bet missing id", function (done) {
+	this.timeout(500);
+
+	joinRoom(function (player, room) {
+		var req = POST("/bet/" + room.number, {
+			amount: 10,
+			numbers: [-1, 1, 41]
+		});
+
+		checkHttpErr(400, req, done);
+	});
+});
+
+test("POST /bet missing amount", function (done) {
+	this.timeout(500);
+
+	joinRoom(function (player, room) {
+		var req = POST("/bet/" + room.number, {
+			id: player.id,
+			numbers: [-1, 1, 41]
+		});
+
+		checkHttpErr(400, req, done);
+	});
+});
+
+test("POST /bet missing numbers", function (done) {
+	this.timeout(500);
+
+	joinRoom(function (player, room) {
+		var req = POST("/bet/" + room.number, {
+			id: player.id,
+			amount: 10
+		});
+
+		checkHttpErr(400, req, done);
+	});
+});
+
+test("POST /bet empty json", function (done) {
+	this.timeout(500);
+
+	joinRoom(function (player, room) {
+		var req = POST("/bet/" + room.number, {});
+
+		checkHttpErr(400, req, done);
+	});
+});
+
+test("POST /bet invalid numbers only", function (done) {
+	this.timeout(500);
+
+	joinRoom(function (player, room) {
+		var req = POST("/bet/" + room.number, {
+			id: player.id,
+			numbers: [-1, 41]
+		});
+
+		checkHttpErr(400, req, done);
+	});
 });
