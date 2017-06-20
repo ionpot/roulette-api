@@ -448,7 +448,7 @@ test("POST /ready no bets", function (done) {
 });
 
 test("POST /ready", function (done) {
-	this.timeout(3000);
+	this.timeout(1500);
 
 	joinRoom(function (player, room) {
 		var req = POST("/bet/" + room.number, {
