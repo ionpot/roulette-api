@@ -108,7 +108,10 @@ function checkApiErr(code, req, done) {
 }
 
 function newRoom(done) {
-	var req = POST("/");
+	var req = POST("/", {
+		maxRounds: 1,
+		duration: 1
+	});
 
 	sendOk(req, done);
 }
@@ -409,5 +412,114 @@ test("POST 415", function (done) {
 		}, "a");
 
 		checkHttpErr(415, req, done);
+	});
+});
+
+test("POST /ready invalid room", function (done) {
+	this.timeout(500);
+
+	var req = POST("/ready/invalid");
+
+	checkApiErr(1, req, done);
+});
+
+test("POST /ready invalid id", function (done) {
+	this.timeout(500);
+
+	joinRoom(function (player, room) {
+		var req = POST("/ready/" + room.number, {
+			id: 1
+		});
+
+		checkApiErr(2, req, done);
+	});
+});
+
+test("POST /ready no bets", function (done) {
+	this.timeout(500);
+
+	joinRoom(function (player, room) {
+		var req = POST("/ready/" + room.number, {
+			id: player.id
+		});
+
+		checkApiErr(3, req, done);
+	});
+});
+
+test("POST /ready", function (done) {
+	this.timeout(500);
+
+	joinRoom(function (player, room) {
+		var req = POST("/bet/" + room.number, {
+			id: player.id,
+			amount: 20,
+			numbers: [1]
+		});
+
+		sendOk(req, function () {
+			var a, b;
+
+			function check() {
+				if (a && b) {
+					A.eq(a.outcome, b.outcome);
+					A.eq(a.amount, b.amount);
+					A.eq(a.won, b.won);
+					A.eq(a.lost, b.lost);
+
+					done();
+				}
+			}
+
+			req = POST("/ready/" + room.number, {
+				id: player.id
+			});
+
+			sendOk(req, function (res) {
+				A.isNum(res.outcome);
+				A.isNum(res.amount);
+				A.isNum(res.won);
+				A.isNum(res.lost);
+
+				a = res;
+
+				check();
+			});
+
+			sendOk(req, function (res) {
+				A.isNum(res.outcome);
+				A.isNum(res.amount);
+				A.isNum(res.won);
+				A.isNum(res.lost);
+
+				b = res;
+
+				check();
+			});
+		});
+	});
+});
+
+test("POST /ready player committed", function (done) {
+	this.timeout(500);
+
+	joinRoom(function (player, room) {
+		var breq = POST("/bet/" + room.number, {
+			id: player.id,
+			amount: 10,
+			numbers: [2]
+		});
+
+		sendOk(breq, function () {
+			var req = POST("/ready/" + room.number, {
+				id: player.id
+			});
+
+			sendOk(req, function () {
+				return;
+			});
+
+			checkApiErr(3, breq, done);
+		});
 	});
 });
