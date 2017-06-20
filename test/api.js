@@ -448,7 +448,7 @@ test("POST /ready no bets", function (done) {
 });
 
 test("POST /ready", function (done) {
-	this.timeout(500);
+	this.timeout(3000);
 
 	joinRoom(function (player, room) {
 		var req = POST("/bet/" + room.number, {
@@ -504,13 +504,15 @@ test("POST /ready player committed", function (done) {
 	this.timeout(500);
 
 	joinRoom(function (player, room) {
-		var breq = POST("/bet/" + room.number, {
-			id: player.id,
-			amount: 10,
-			numbers: [2]
-		});
+		function breq() {
+			return POST("/bet/" + room.number, {
+				id: player.id,
+				amount: 10,
+				numbers: [2]
+			});
+		}
 
-		sendOk(breq, function () {
+		sendOk(breq(), function () {
 			var req = POST("/ready/" + room.number, {
 				id: player.id
 			});
@@ -519,7 +521,7 @@ test("POST /ready player committed", function (done) {
 				return;
 			});
 
-			checkApiErr(3, breq, done);
+			checkApiErr(3, breq(), done);
 		});
 	});
 });
