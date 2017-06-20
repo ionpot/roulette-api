@@ -278,13 +278,16 @@ test("POST /bet", function (done) {
 		var req = POST("/bet/" + room.number, {
 			id: player.id,
 			amount: 10,
-			numbers: [-1, 1, 41]
+			numbers: [-1, 0, 36, 37]
 		});
 
 		sendOk(req, function (res) {
 			A.eq(res.amount, 10);
-			A.eq(res.numbers.length, 1);
-			A.eq(res.numbers[0], 1);
+			A.eq(res.numbers.length, 2);
+			A.eq(res.numbers[0], 0);
+			A.eq(res.numbers[1], 36);
+
+			done();
 		});
 	});
 });
@@ -304,8 +307,18 @@ test("POST /bet invalid id", function (done) {
 		var req = POST("/bet/" + room.number, {
 			id: 0,
 			amount: 10,
-			numbers: [-1, 1, 41]
+			numbers: [1]
 		});
+
+		checkApiErr(2, req, done);
+	});
+});
+
+test("POST /bet empty json", function (done) {
+	this.timeout(500);
+
+	joinRoom(function (player, room) {
+		var req = POST("/bet/" + room.number, {});
 
 		checkApiErr(2, req, done);
 	});
@@ -317,10 +330,10 @@ test("POST /bet missing id", function (done) {
 	joinRoom(function (player, room) {
 		var req = POST("/bet/" + room.number, {
 			amount: 10,
-			numbers: [-1, 1, 41]
+			numbers: [1]
 		});
 
-		checkHttpErr(400, req, done);
+		checkApiErr(2, req, done);
 	});
 });
 
@@ -330,7 +343,7 @@ test("POST /bet missing amount", function (done) {
 	joinRoom(function (player, room) {
 		var req = POST("/bet/" + room.number, {
 			id: player.id,
-			numbers: [-1, 1, 41]
+			numbers: [1]
 		});
 
 		checkHttpErr(400, req, done);
@@ -350,23 +363,13 @@ test("POST /bet missing numbers", function (done) {
 	});
 });
 
-test("POST /bet empty json", function (done) {
-	this.timeout(500);
-
-	joinRoom(function (player, room) {
-		var req = POST("/bet/" + room.number, {});
-
-		checkHttpErr(400, req, done);
-	});
-});
-
 test("POST /bet invalid numbers only", function (done) {
 	this.timeout(500);
 
 	joinRoom(function (player, room) {
 		var req = POST("/bet/" + room.number, {
 			id: player.id,
-			numbers: [-1, 41]
+			numbers: [-2, 41]
 		});
 
 		checkHttpErr(400, req, done);
