@@ -375,3 +375,39 @@ test("POST /bet invalid numbers only", function (done) {
 		checkHttpErr(400, req, done);
 	});
 });
+
+test("POST 411", function (done) {
+	this.timeout(500);
+
+	joinRoom(function (player, room) {
+		var req = makeReq("POST", "/bet/" + room.number);
+
+		checkHttpErr(411, req, done);
+	});
+});
+
+test("POST 413", function (done) {
+	this.timeout(500);
+
+	joinRoom(function (player, room) {
+		var req = makeReq("POST", "/bet/" + room.number, {
+			"content-length": 1001
+		});
+
+		checkHttpErr(413, req, done);
+	});
+});
+
+test("POST 415", function (done) {
+	this.timeout(500);
+
+	joinRoom(function (player, room) {
+		var req = makeReq("POST", "/bet/" + room.number, {
+			"content-length": 1,
+			"content-type": "text/plain"
+
+		}, "a");
+
+		checkHttpErr(415, req, done);
+	});
+});
